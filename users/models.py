@@ -52,3 +52,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.username
+
+
+# Creating a PhoneNumber model
+class PhoneNumber():
+    pass
