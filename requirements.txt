@@ -1,0 +1,17 @@
+cachetools==5.2.0
+certifi==2022.6.15
+cffi==1.15.0
+charset-normalizer==2.0.12
+cryptography==37.0.2
+django-cors-headers==3.13.0
+django-phonenumber-field==6.1.0
+djangorestframework==3.13.1
+dj-rest-auth==2.2.4
+Django==4.0.4
+django-allauth==0.50.0
+djangorestframework-simplejwt==5.2.0
+google-api-core==2.8.2
+google-auth==2.8.0
+google-auth-httplib2==0.1.0
+googleapis-common-protos==1.56.3
+psycopg2-binary==2.9.3
