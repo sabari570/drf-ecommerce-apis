@@ -1,6 +1,6 @@
 from django.urls import path, include
 from .views import (UserRegistrationAPIView,
-                    SendOrResendSMSAPIView, UserLoginAPIView)
+                    SendOrResendSMSAPIView, UserLoginAPIView, PhoneNumberVerificationAPIView)
 
 # The purpose of defining app_name = 'users' in the urls.py file is to namespace
 # the URLs of an app. This helps to uniquely identify and reference the URLs of a specific app,
@@ -11,4 +11,6 @@ urlpatterns = [
     path('register/', UserRegistrationAPIView.as_view(), name='user register'),
     path('login/', UserLoginAPIView.as_view(), name="user login"),
     path('send-sms/', SendOrResendSMSAPIView.as_view(), name="send or resend sms"),
+    path("verify-phone/", PhoneNumberVerificationAPIView.as_view(),
+         name="phone number verification")
 ]

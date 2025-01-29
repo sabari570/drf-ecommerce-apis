@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model, authenticate
 from .models import PhoneNumber
 from .exceptions import (AccountNotRegisteredException,
                          InvalidCredentialExceptions, AccountDisabledException)
+from django.conf import settings
 
 User = get_user_model()
 
@@ -153,4 +154,27 @@ class UserLoginSerializer(LoginSerializer):
                     _("Phone number is not verified"))
 
         validated_data["user"] = user
+        return validated_data
+
+
+class PhoneNumberVerificationSerializer(serializers.Serializer):
+    '''
+    Serializer used to verify the phone number with the OTP generated for it
+    '''
+    phone_number = PhoneNumberField(required=True)
+    otp = serializers.CharField(
+        required=True, max_length=settings.TOKEN_LENGTH)
+
+    def validate_phone_number(self, value):
+        user = User.objects.filter(phone__phone_number=value).exists()
+        if not user:
+            raise AccountNotRegisteredException()
+        return value
+
+    def validate(self, validated_data):
+        phone_number = validated_data.get("phone_number")
+        otp = validated_data.get("otp")
+        phoneNumber_instance = PhoneNumber.objects.get(
+            phone_number=phone_number)
+        phoneNumber_instance.check_verification(security_code=otp)
         return validated_data

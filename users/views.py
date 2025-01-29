@@ -5,7 +5,8 @@ from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from dj_rest_auth.registration.views import RegisterView
 from dj_rest_auth.views import LoginView
-from .serializers import UserRegistrationSerializer, PhoneNumberSerializer, UserLoginSerializer
+from .serializers import (UserRegistrationSerializer, PhoneNumberSerializer,
+                          UserLoginSerializer, PhoneNumberVerificationSerializer)
 from .utils import send_or_resend_sms
 from rest_framework.exceptions import APIException
 from .exceptions import InternalServerErrorException
@@ -83,8 +84,32 @@ class SendOrResendSMSAPIView(GenericAPIView):
             raise InternalServerErrorException()
 
 # This class is the UserLoginview that inherits the LoginView from the serializer
+
+
 class UserLoginAPIView(LoginView):
     '''
     Authenticate existing users using email or phone and password
     '''
     serializer_class = UserLoginSerializer
+
+
+class PhoneNumberVerificationAPIView(GenericAPIView):
+    '''
+    This view is used to verify the phone number with its secure OTP generated
+    '''
+    serializer_class = PhoneNumberVerificationSerializer
+
+    def post(self, request, *args, **kwargs):
+        try:
+            with transaction.atomic():
+                serializer = self.get_serializer(data=request.data)
+                if serializer.is_valid():
+                    message = {"detail": _(
+                        "Your phone number is verified successfully")}
+                    return Response(message, status=status.HTTP_200_OK)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except APIException as e:
+            raise e
+        except Exception as e:
+            print(f"Error while verifying the phone number with OTP: ", str(e))
+            raise InternalServerErrorException()
