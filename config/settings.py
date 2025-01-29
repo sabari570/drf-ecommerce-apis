@@ -58,9 +58,6 @@ INSTALLED_APPS = [
     'users'
 ]
 
-# This is inorder to view the django admin panel
-SITE_ID = 1
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -154,3 +151,12 @@ REST_FRAMEWORK = {
         'dj_rest_auth.jwt_auth.JWTCookieAuthentication',
     ),
 }
+
+# This is inorder to view the django admin panel
+SITE_ID = 1
+
+# Token length for OTP
+TOKEN_LENGTH = 6
+
+# Token expiry
+TOKEN_EXPIRE_MINUTES = 3

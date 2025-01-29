@@ -18,5 +18,7 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # path('api/user/', include('users.urls', namespace='users'))
+    path('api/user/', include('users.urls', namespace='users')),
+    # this is added inorder to avoid the allauth-inactive url issue
+    path("", include("allauth.account.urls"))
 ]
