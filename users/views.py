@@ -4,7 +4,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from dj_rest_auth.registration.views import RegisterView
-from .serializers import UserRegistrationSerializer, PhoneNumberSerializer
+from dj_rest_auth.views import LoginView
+from .serializers import UserRegistrationSerializer, PhoneNumberSerializer, UserLoginSerializer
 from .utils import send_or_resend_sms
 from rest_framework.exceptions import APIException
 from .exceptions import InternalServerErrorException
@@ -28,6 +29,8 @@ class UserRegistrationAPIView(RegisterView):
             with transaction.atomic():
                 serializer = self.get_serializer(data=request.data)
                 serializer.is_valid(raise_exception=True)
+                # User model is created inside perform_create() in RegisterView
+                # and the EmailAddresses model is also getting filled automatically when the user record is created by the RegisterView
                 user = self.perform_create(serializer)
                 headers = self.get_success_headers(serializer.data)
 
@@ -66,7 +69,8 @@ class SendOrResendSMSAPIView(GenericAPIView):
                 serializer = self.get_serializer(data=request.data)
                 if serializer.is_valid():
                     # Convert the validated phone number to string
-                    phone_number = str(serializer.validated_data["phone_number"])
+                    phone_number = str(
+                        serializer.validated_data["phone_number"])
                     otp = send_or_resend_sms(phone_number)
                     if not otp:
                         return Response({"error": "Phone number not found or already verified."}, status=status.HTTP_400_BAD_REQUEST)
@@ -77,3 +81,10 @@ class SendOrResendSMSAPIView(GenericAPIView):
         except Exception as e:
             print("Exception while sending OTP to user: ", str(e))
             raise InternalServerErrorException()
+
+# This class is the UserLoginview that inherits the LoginView from the serializer
+class UserLoginAPIView(LoginView):
+    '''
+    Authenticate existing users using email or phone and password
+    '''
+    serializer_class = UserLoginSerializer

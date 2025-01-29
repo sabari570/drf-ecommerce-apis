@@ -2,10 +2,12 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from dj_rest_auth.registration.serializers import RegisterSerializer
+from dj_rest_auth.serializers import LoginSerializer
 from phonenumber_field.serializerfields import PhoneNumberField
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate
 from .models import PhoneNumber
-from .exceptions import (AccountNotRegisteredException)
+from .exceptions import (AccountNotRegisteredException,
+                         InvalidCredentialExceptions, AccountDisabledException)
 
 User = get_user_model()
 
@@ -51,6 +53,8 @@ class UserRegistrationSerializer(RegisterSerializer):
             PhoneNumber.objects.create(user=user, phone_number=phone_number)
             user.phone.save()   # this connects the user with the phone number instance
 
+    # This custom signup function is automatically called when the user is registered by the serializer
+    # After the user is saved to the DB, the phone number is created and then added to the DB linking the user and PhoneNumber instance
     def custom_signup(self, request, user):
         self.create_phone(user=user, validated_data=self.validated_data)
 
@@ -81,3 +85,72 @@ class PhoneNumberSerializer(serializers.ModelSerializer):
         except User.DoesNotExist:
             raise AccountNotRegisteredException()
         return value
+
+
+# This is the UserLoginSerializer
+class UserLoginSerializer(LoginSerializer):
+    '''
+    Serializer which is used to serialize users logging in via email or phone and password
+    '''
+    email = serializers.EmailField(required=False, allow_blank=True)
+    phone_number = PhoneNumberField(required=False, allow_blank=True)
+    password = serializers.CharField(required=True, write_only=True, style={
+                                     'input-type': 'password'})
+
+    # This is the format of how the custom authenticate function inside the EmailAuthBackend and PhoneAuthBackend should be called
+    def authenticate(self, **kwargs):
+        return authenticate(self.context["request"], **kwargs)
+
+    # The _ in the begining indicates that this is a private function
+    # This function actually authenticates the user based on email or phone_number and password
+    # and then returns the user instance from the DB
+    def _validate_phone_email(self, email, phone_number, password):
+        user = None
+        if email and password:
+            user = self.authenticate(username=email, password=password)
+        elif phone_number and password:
+            user = self.authenticate(username=str(
+                phone_number), password=password)
+        else:
+            raise serializers.ValidationError(
+                _("Enter a phone number or email and password."))
+        return user
+
+    # This function is used to validate the data obtained from the serializer
+    def validate(self, validated_data):
+        email = validated_data.get("email")
+        phone_number = validated_data.get("phone_number")
+        password = validated_data.get("password")
+        user = self._validate_phone_email(
+            email=email, phone_number=phone_number, password=password)
+
+        # If the user credentials are incorrect then
+        if not user:
+            raise InvalidCredentialExceptions()
+
+        # If the user is disabled by setting the is_active to false
+        if not user.is_active:
+            raise AccountDisabledException()
+
+        # return the user only if the user email address registered is verified
+        # verification is done by sending a confirmation mail
+        if email:
+            # In Django's ORM, the _set suffix is automatically created for reverse relations when using a
+            # ForeignKey or OneToManyField. It allows you to access related objects from the other side of the relationship.
+            # the _set can be removed if we use the related_name parameter while creating the EmailAddress model
+            # since the EmailAddress is automatically created by the allauth package it doesnt have the related_name field and \
+            # thats why inorder to access the user related email addresses we need the _set
+            # User and EmailAddress model has a one-to-many relationship
+            email_address = user.emailaddress_set.filter(
+                email=user.email, verified=True).exists()
+            if not email_address:
+                raise serializers.ValidationError(_("E-mail is not verified"))
+        else:
+            # Here we dont filter them because User and PhoneNumber has a one-to-one relationship so we
+            # can access the phone number of a user directly
+            if not user.phone.is_verified:
+                raise serializers.ValidationError(
+                    _("Phone number is not verified"))
+
+        validated_data["user"] = user
+        return validated_data

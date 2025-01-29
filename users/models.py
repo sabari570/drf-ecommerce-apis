@@ -48,7 +48,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     lastname = models.CharField(_("last name"), max_length=30, blank=True)
     is_staff = models.BooleanField(_("staff status"), default=False, help_text=(
         "Designates whether the user can log into this admin site."))
-    is_active = models.BooleanField(_("active status"), default=False, help_text=(
+    is_active = models.BooleanField(_("active status"), default=True, help_text=(
         "Designates whether the user should be treated as active. ""Unselect this instead of deleting accounts."))
     date_joined = models.DateTimeField(_("date joined"), default=now)
 
