@@ -25,3 +25,9 @@ class AccountDisabledException(APIException):
     status_code = 403
     default_detail = _("User account is disabled")
     default_code = 'account-disabled'
+
+
+class TokenBlackListedException(APIException):
+    status_code = 401
+    default_detail = _("This token is blacklisted.")
+    default_code = 'blacklisted-token'

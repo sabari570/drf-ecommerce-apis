@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import timedelta
 # Config is used to access the .env values
 # Csv is used to convert the values from .env as as list
 from decouple import config, Csv
@@ -42,6 +43,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'dj_rest_auth.registration',
     'corsheaders',
+    'rest_framework_simplejwt.token_blacklist',
 
     # Local apps
     'users'
@@ -137,7 +139,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'dj_rest_auth.jwt_auth.JWTCookieAuthentication',
+        # 'dj_rest_auth.jwt_auth.JWTCookieAuthentication',
+
+        # This is the CustomJWTCookieAuthentication we created inorder to improve security
+        'users.authenticate.CustomJWTCookieAuthentication',
     ),
 }
 
@@ -204,3 +209,13 @@ OLD_PASSWORD_FIELD_ENABLED = True
 
 # When password is changed it logs you out immediately when set to true
 LOGOUT_ON_PASSWORD_CHANGE = True
+
+# This configuration is for setting up the JWT token and blacklisting them
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,  # Blacklist old refresh tokens
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+    "TOKEN_BLACKLIST_ENABLED": True,
+}

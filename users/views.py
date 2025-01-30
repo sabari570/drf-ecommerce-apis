@@ -1,7 +1,8 @@
+from django.conf import settings
 from django.utils.translation import gettext as _
 from django.contrib.auth import get_user_model
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework.generics import GenericAPIView
 from dj_rest_auth.registration.views import RegisterView
 from dj_rest_auth.views import LoginView
@@ -9,11 +10,14 @@ from .serializers import (UserRegistrationSerializer, PhoneNumberSerializer,
                           UserLoginSerializer, PhoneNumberVerificationSerializer)
 from .utils import send_or_resend_sms
 from rest_framework.exceptions import APIException
-from .exceptions import InternalServerErrorException
+from .exceptions import InternalServerErrorException, TokenBlackListedException
 # this is for including transactions in our API while interacting with DB
 from django.db import transaction
 from allauth.account.utils import send_email_confirmation
 from dj_rest_auth.registration.serializers import ResendEmailVerificationSerializer
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
+from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
+from rest_framework_simplejwt.exceptions import TokenError
 
 # Create your views here.
 
@@ -131,7 +135,8 @@ class ResendEmailVerificationView(GenericAPIView):
         try:
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            user = User.objects.filter(email=serializer.validated_data["email"]).first()
+            user = User.objects.filter(
+                email=serializer.validated_data["email"]).first()
             if not user:
                 return Response({'mesage': _('This user is not registered')}, status=status.HTTP_400_BAD_REQUEST)
             email = user.emailaddress_set.filter(email=user.email).first()
@@ -144,4 +149,56 @@ class ResendEmailVerificationView(GenericAPIView):
             raise e
         except Exception as e:
             print(e)
+            raise InternalServerErrorException()
+
+
+class LogoutView(GenericAPIView):
+    '''
+    Custom Logout view that deletes the cookies and invalidas them by adding the tokens to Blacklisted tokens.
+    '''
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        try:
+            ACCESS_TOKEN_COOKIE_KEY = getattr(
+                settings, 'JWT_AUTH_COOKIE', None)
+            REFRESH_TOKEN_COOKIE_KEY = getattr(
+                settings, 'JWT_AUTH_REFRESH_COOKIE', None)
+
+            refresh_token = request.COOKIES.get(
+                REFRESH_TOKEN_COOKIE_KEY)    # Get access token from cookies
+            # Get refresh token from cookies
+            access_token = request.COOKIES.get(ACCESS_TOKEN_COOKIE_KEY)
+
+            if refresh_token:
+                token = RefreshToken(refresh_token)
+                token.blacklist()   # Blacklisting the refresh token
+
+            # Blacklist the access token by finding the corresponding OutStandingToken.
+            # Inorder to solve the "BlacklistedToken.token" must be a "OutstandingToken" instance." issue
+            if access_token:
+                token = AccessToken(access_token)
+
+                # Get the JWT ID (jti)
+                jti = token['jti']
+
+                # Find the associated OutstandingToken
+                outstanding_token = OutstandingToken.objects.filter(
+                    jti=jti).first()
+                if outstanding_token:
+                    # Manually adding the token to Blackist model
+                    # In this case BlackListed.token is an instance of OutStandingToken
+                    BlacklistedToken.objects.create(token=outstanding_token)
+
+            response = Response(
+                {"detail": "Successfully logged out"}, status=status.HTTP_200_OK)
+            response.delete_cookie(ACCESS_TOKEN_COOKIE_KEY)
+            response.delete_cookie(REFRESH_TOKEN_COOKIE_KEY)
+            return response
+        except APIException as e:
+            raise e
+        except TokenError as e:
+            raise TokenBlackListedException()
+        except Exception as e:
+            print(f"Exception while logging out an user: {type(e).__name__}")
             raise InternalServerErrorException()
