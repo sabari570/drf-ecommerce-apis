@@ -13,6 +13,7 @@ from .exceptions import InternalServerErrorException
 # this is for including transactions in our API while interacting with DB
 from django.db import transaction
 from allauth.account.utils import send_email_confirmation
+from dj_rest_auth.registration.serializers import ResendEmailVerificationSerializer
 
 # Create your views here.
 
@@ -115,4 +116,32 @@ class PhoneNumberVerificationAPIView(GenericAPIView):
             raise e
         except Exception as e:
             print(f"Error while verifying the phone number with OTP: ", str(e))
+            raise InternalServerErrorException()
+
+# Custom view for Resend email verification
+
+
+class ResendEmailVerificationView(GenericAPIView):
+    '''
+    This view is used to resend the verification emails to those that are not verified
+    '''
+    serializer_class = ResendEmailVerificationSerializer
+
+    def post(self, request, *args, **kwargs):
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            user = User.objects.filter(email=serializer.validated_data["email"]).first()
+            if not user:
+                return Response({'mesage': _('This user is not registered')}, status=status.HTTP_400_BAD_REQUEST)
+            email = user.emailaddress_set.filter(email=user.email).first()
+            if email and not email.verified:
+                send_email_confirmation(request, user)
+                return Response({'detail': _('ok')}, status=status.HTTP_200_OK)
+            else:
+                return Response({'mesage': _('Email not registered or it is already verified')}, status=status.HTTP_400_BAD_REQUEST)
+        except APIException as e:
+            raise e
+        except Exception as e:
+            print(e)
             raise InternalServerErrorException()

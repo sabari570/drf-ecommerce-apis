@@ -20,8 +20,6 @@ from allauth.account.views import confirm_email
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/user/', include('users.urls', namespace='users')),
-    # this is added inorder to avoid the allauth-inactive url issue
-    path("", include("allauth.account.urls")),
     # This path is added inorder to verify the email address, when a user is registered successfully you get an email with an URL to confirm email
     # on clicking that link you will be redirected to account-confirm-email/ page which hits a GET request
     # on that page on clicking the confirm email button will hit a POST request on this same endpoint thus verifying your email
@@ -29,4 +27,6 @@ urlpatterns = [
     # Example URLs that satisfies this pattern: /account-confirm-email/NDA:1tdMmL:H_fsasNpvKC3BxMaiAfdldQd4ohSKfkNPKFOhub5tQo/
     re_path(r"^account-confirm-email/(?P<key>[-:\w]+)/$", confirm_email,
             name="account_confirm_email"),
+    # this is added inorder to avoid the allauth-inactive url issue
+    path("", include("allauth.account.urls")),
 ]
