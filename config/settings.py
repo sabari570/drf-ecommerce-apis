@@ -197,3 +197,10 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # After confirming the email you will be directed to this URL
 LOGIN_URL = 'http://localhost:8000/api/user/login/'
+
+# On setting this to true, when the password change API is HIT it will prompt you to enter the okd password
+# inorder to change the password
+OLD_PASSWORD_FIELD_ENABLED = True
+
+# When password is changed it logs you out immediately when set to true
+LOGOUT_ON_PASSWORD_CHANGE = True

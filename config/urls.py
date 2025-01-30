@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, re_path, include
 from allauth.account.views import confirm_email
-from dj_rest_auth.views import PasswordResetView, PasswordResetConfirmView
+from dj_rest_auth.views import PasswordResetView, PasswordResetConfirmView, PasswordChangeView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -36,6 +36,9 @@ urlpatterns = [
     # This is the end point which will be sent throught the email and on clicking it you will be able to reset the password
     # you will have 2 additional fields in it uid and token which will be obtained from the URL
     path("password/reset/confirm/<str:uidb64>/<str:token>/", PasswordResetConfirmView.as_view(), name="password_reset_confirm"),
+
+    # Api endpoint to change the password
+    path("password/change/", PasswordChangeView.as_view(), name="change password"),
 
     # this is added inorder to avoid the allauth-inactive url issue
     path("", include("allauth.account.urls")),
