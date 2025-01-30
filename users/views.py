@@ -12,6 +12,7 @@ from rest_framework.exceptions import APIException
 from .exceptions import InternalServerErrorException
 # this is for including transactions in our API while interacting with DB
 from django.db import transaction
+from allauth.account.utils import send_email_confirmation
 
 # Create your views here.
 
@@ -46,6 +47,8 @@ class UserRegistrationAPIView(RegisterView):
                         "secuity code": str(otp),
                     }
                 elif email and not phone_number:
+                    # This sends a verification email to the registered user
+                    send_email_confirmation(request, user)
                     response_data = {"detail": _("Verification e-mail sent")}
                 else:
                     otp = send_or_resend_sms(phone_number)

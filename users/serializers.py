@@ -22,9 +22,9 @@ class UserRegistrationSerializer(RegisterSerializer):
     Serializer for registring new users using email or phone number
     '''
     username = serializers.CharField(max_length=30, required=False)
-    email = serializers.EmailField(required=True)
+    email = serializers.EmailField(required=False)
     phone_number = PhoneNumberField(
-        required=True,
+        required=False,
         write_only=True,
         validators=[
             UniqueValidator(

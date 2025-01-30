@@ -182,3 +182,18 @@ AUTHENTICATION_BACKENDS = [
     'users.backend.email_backend.EmailAuthBackend',
     'users.backend.phone_backend.PhoneNumberAuthBackend'
 ]
+
+# This is set for the configuration of sending verification mails to the registered emails
+# This setting is required only if you are actually sending emails to the registered users
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'your.email.host'
+# EMAIL_USE_TLS = True
+# EMAIL_PORT = 587
+# EMAIL_HOST_USER = 'your email host user'
+# EMAIL_HOST_PASSWORD = 'your email host password'
+
+# In this case the email is sent and received by the console.
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# After confirming the email you will be directed to this URL
+LOGIN_URL = 'http://localhost:8000/api/user/login/'
