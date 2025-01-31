@@ -3,3 +3,31 @@ INORDER TO DELETE THE OUTSTANDING TOKENS RECORDS:
 	* Command to execute: 
 			from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 			OutstandingToken.objects.filter(user__email='email@example.com').delete()
+
+
+
+INORDER TO MAINTAIN A PROFESSIONAL CODE AND WELL STRUCTURED PROJECT:
+	* Divide the settings configuration into 3 files:
+		* base.py -> that contains all the base configuration
+		* development.py -> that takes in the base.py and then additionally adds anything that is needed for the dev server
+		* production.py -> that takes in the base.py and then additionally adds anything that is needed for the prod server
+
+	* After that we need to set the environment variable to select which if this conf should we choose:
+		IN LINUX:
+		* export DJANGO_SETTINGS_MODULE=myproject.settings.local  # For local development
+		* export DJANGO_SETTINGS_MODULE=myproject.settings.production  # For production
+
+		IN WINDOWS:
+		* set DJANGO_SETTINGS_MODULE=myproject.settings.local  # For local development
+		* set DJANGO_SETTINGS_MODULE=myproject.settings.production  # For production
+
+	* After that update the manage.py and wsgi.py files accordingly:
+		* First set a variable in the env file: 
+			DJANGO_SETTINGS_MODULE=config.settings.base
+			Choose which is the conf is it base or dev or prod
+		* Next inside the manage.py file change the line:
+			os.environ.setdefault("DJANGO_SETTINGS_MODULE", config("DJANGO_SETTINGS_MODULE"))
+	
+	* The wsgi.py file configurations are for production purpose only.
+
+

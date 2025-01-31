@@ -19,6 +19,9 @@ from allauth.account.views import confirm_email
 from dj_rest_auth.views import (
     PasswordResetView, PasswordResetConfirmView, PasswordChangeView)
 
+# For including the API documentation
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/user/', include('users.urls', namespace='users')),
@@ -43,4 +46,12 @@ urlpatterns = [
 
     # this is added inorder to avoid the allauth-inactive url issue
     path("", include("allauth.account.urls")),
+]
+
+# SCHEMA URLs =>
+# This is used to include the API documentation
+# Refer documentation: https://drf-spectacular.readthedocs.io/en/latest/readme.html#installation
+urlpatterns += [
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 ]

@@ -47,6 +47,9 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework_simplejwt.token_blacklist',
 
+    # for API documentation
+    'drf_spectacular',
+
     # Local apps
     'users'
 ]
@@ -146,6 +149,8 @@ REST_FRAMEWORK = {
         # This is the CustomJWTCookieAuthentication we created inorder to improve security
         'users.authenticate.CustomJWTCookieAuthentication',
     ),
+    # Inorder to setup API documentation
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 # This is inorder to view the django admin panel
@@ -228,3 +233,12 @@ CORS_ALLOWED_ORIGINS = [
 ]
 # If your frontend needs to send credentials (e.g., cookies or authentication headers)
 CORS_ALLOW_CREDENTIALS = True
+
+
+# Inorder to setup API dodumentation
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'E-commerce API',
+    'DESCRIPTION': 'An E-commerce API built using Django rest framework',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
