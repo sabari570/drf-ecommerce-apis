@@ -2,6 +2,7 @@ from dj_rest_auth.jwt_auth import JWTCookieAuthentication
 from django.conf import settings
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken
+from rest_framework_simplejwt.tokens import AccessToken
 
 
 class CustomJWTCookieAuthentication(JWTCookieAuthentication):
@@ -30,7 +31,11 @@ class CustomJWTCookieAuthentication(JWTCookieAuthentication):
             return None
 
         try:
-            if BlacklistedToken.objects.filter(token__jti=raw_token).exists():
+            token = AccessToken(raw_token)
+
+            # Get the JWT ID (jti)
+            jti = token['jti']
+            if BlacklistedToken.objects.filter(token__jti=jti).exists():
                 raise AuthenticationFailed("Token has been Blacklisted")
             validated_token = self.get_validated_token(raw_token)
             return self.get_user(validated_token), validated_token

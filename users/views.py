@@ -18,6 +18,7 @@ from dj_rest_auth.registration.serializers import ResendEmailVerificationSeriali
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from rest_framework_simplejwt.exceptions import TokenError
+from django.utils.timezone import datetime, make_aware
 
 # Create your views here.
 
@@ -181,14 +182,21 @@ class LogoutView(GenericAPIView):
 
                 # Get the JWT ID (jti)
                 jti = token['jti']
+                exp_timestamp = token['exp']
+                exp_datetime = make_aware(
+                    datetime.fromtimestamp(exp_timestamp))
 
-                # Find the associated OutstandingToken
-                outstanding_token = OutstandingToken.objects.filter(
-                    jti=jti).first()
-                if outstanding_token:
-                    # Manually adding the token to Blackist model
-                    # In this case BlackListed.token is an instance of OutStandingToken
-                    BlacklistedToken.objects.create(token=outstanding_token)
+                # Create an OutstandingToken entry for the access token
+                outstanding_token, created = OutstandingToken.objects.get_or_create(
+                    jti=jti,
+                    token=access_token,
+                    user=request.user,
+                    created_at=make_aware(datetime.utcnow()),
+                    expires_at=exp_datetime
+                )
+                # Manually adding the token to Blackist model
+                # In this case BlackListed.token is an instance of OutStandingToken
+                BlacklistedToken.objects.create(token=outstanding_token)
 
             response = Response(
                 {"detail": "Successfully logged out"}, status=status.HTTP_200_OK)
@@ -201,4 +209,5 @@ class LogoutView(GenericAPIView):
             raise TokenBlackListedException()
         except Exception as e:
             print(f"Exception while logging out an user: {type(e).__name__}")
+            print(f"Exception error: {e}")
             raise InternalServerErrorException()
