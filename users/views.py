@@ -19,6 +19,15 @@ from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from rest_framework_simplejwt.exceptions import TokenError
 from django.utils.timezone import datetime, make_aware
+from decouple import config
+
+# Imports for google login setup
+from dj_rest_auth.registration.views import SocialLoginView
+from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
+from allauth.socialaccount.providers.oauth2.client import OAuth2Client
+
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import RedirectView
 
 # Create your views here.
 
@@ -211,3 +220,33 @@ class LogoutView(GenericAPIView):
             print(f"Exception while logging out an user: {type(e).__name__}")
             print(f"Exception error: {e}")
             raise InternalServerErrorException()
+
+# APIView for GoogleLogin setup
+# After writing this view Go to GoogleCloud console -> create a project
+# then Go to OAuth consent screen and then set the redirect URL as where you want to redirect after successfull login
+# Then copy the ClientID and ClientSecret from Google cloud console and then paste it inside the SocialApplications tables inside the DjangoAdmin panel
+# Make sure to choose the domains listed below for accepting the request from the API.
+
+# For hitting this API successfully you will have to pass an access_token in the POST body of this API request
+# This access_token is obtained from OAuth 2.0 playground: https://developers.google.com/oauthplayground/
+# on the input your own scopes type: https://www.googleapis.com/auth/userinfo.email and then click on Authorize API
+# Once authorized using your own gmail, Click on Exchange authorization code for tokens button
+# You will get an access_token that should be passed in the body of this API
+# The response of this API will be the LoginAPI response
+class GoogleLoginView(SocialLoginView):
+    ''''
+    This view is used for logging in via google
+    '''
+    adapter_class = GoogleOAuth2Adapter
+    client_class = OAuth2Client
+    callback_url = config('GOOGLE_REDIRECT_URL')
+
+class HomeAPIView(GenericAPIView):
+    '''
+    This is an API view that only authenticated users can access
+    '''
+    permission_classes = [permissions.IsAuthenticated]
+    def get(self, request, *args, **kwargs):
+        return Response({
+            "message": _("Welcome to the Home View.")
+        })

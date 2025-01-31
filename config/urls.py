@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path, re_path, include
 from allauth.account.views import confirm_email
 from dj_rest_auth.views import (
-    PasswordResetView, PasswordResetConfirmView, PasswordChangeView, LogoutView)
+    PasswordResetView, PasswordResetConfirmView, PasswordChangeView)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -40,9 +40,6 @@ urlpatterns = [
 
     # API endpoint to change the password
     path("password/change/", PasswordChangeView.as_view(), name="change password"),
-
-    # API endpoint to logout the user
-    # path("logout/", LogoutView.as_view(), name="logout user"),
 
     # this is added inorder to avoid the allauth-inactive url issue
     path("", include("allauth.account.urls")),
