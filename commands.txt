@@ -1,0 +1,5 @@
+INORDER TO DELETE THE OUTSTANDING TOKENS RECORDS:
+	* Command to open python shell from django: python3 manage.py shell.
+	* Command to execute: 
+			from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
+			OutstandingToken.objects.filter(user__email='email@example.com').delete()
