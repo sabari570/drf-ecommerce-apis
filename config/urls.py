@@ -29,6 +29,7 @@ from django.conf import settings
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/user/', include('users.urls', namespace='users')),
+    path('api/products/', include('products.urls', namespace='products')),
 
     # This path is added inorder to verify the email address, when a user is registered successfully you get an email with an URL to confirm email
     # on clicking that link you will be redirected to account-confirm-email/ page which hits a GET request
