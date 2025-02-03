@@ -13,6 +13,7 @@ import datetime  # For converting the time from settings inorder to check the to
 from django.utils import timezone
 # when verification code is not verified
 from rest_framework.exceptions import NotAcceptable
+from django_countries.fields import CountryField
 
 # Create your models here.
 
@@ -63,6 +64,13 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.username
+
+    def get_full_name(self):
+        '''
+        Returns the first_name plus the last_name, with a space in between
+        '''
+        full_name = "%s %s" % (self.firstname, self.lastname)
+        return full_name.strip()
 
 
 # Accessing the User model we created
@@ -129,3 +137,53 @@ class PhoneNumber(models.Model):
             raise NotAcceptable(
                 _("Your security code is wrong, expired or this phone is verified before"))
         return self.is_verified
+
+
+# Model that contains fields regarding the user's profile
+class Profile(models.Model):
+    user = models.OneToOneField(
+        CustomUser, related_name='profile', on_delete=models.CASCADE)
+    # Here, the upload_to='avatar' part means that uploaded avatar images will be stored in a
+    # folder named avatar within the media directory (the default directory for media files in Django)
+    avatar = models.ImageField(upload_to='avatar', blank=True)
+    bio = models.CharField(max_length=200, blank=True)
+
+    created_at = models.DateField(auto_now_add=True)
+    updated_at = models.DateField(auto_now=True)
+
+    class Meta:
+        # when fetched the profile details are oredered in descending order
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        return self.user.get_full_name()
+
+
+# Model the notes the address of the user for shipping purpose
+class Address(models.Model):
+    # Address options
+    BILLING = "B"
+    SHIPPING = "S"
+
+    ADDRESS_CHOICES = ((BILLING, _("billing")), (SHIPPING, _("shipping")))
+
+    # To identify this address belongs to which user
+    # One user can have muliple addresses
+    user = models.ForeignKey(
+        CustomUser, related_name='addresses', on_delete=models.CASCADE)
+    address_type = models.CharField(max_length=1, choices=ADDRESS_CHOICES)
+    default = models.BooleanField(default=False)
+    country = CountryField()
+    city = models.CharField(max_length=100)
+    street_address = models.CharField(max_length=100)
+    apartment_address = models.CharField(max_length=100)
+    postal_code = models.CharField(max_length=20, blank=True)
+
+    created_at = models.DateField(auto_now_add=True)
+    updated_at = models.DateField(auto_now=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        return self.user.get_full_name()

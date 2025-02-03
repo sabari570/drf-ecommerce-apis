@@ -3,6 +3,7 @@ from datetime import timedelta
 # Config is used to access the .env values
 # Csv is used to convert the values from .env as as list
 from decouple import config, Csv
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -41,6 +42,7 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
+    'django_countries',
     # For google login setup
     'allauth.socialaccount.providers.google',
     'dj_rest_auth.registration',
@@ -242,3 +244,7 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
+
+# Configuration to setup and view the media uploaded to the avatar folder
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

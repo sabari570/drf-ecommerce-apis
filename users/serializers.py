@@ -5,10 +5,11 @@ from dj_rest_auth.registration.serializers import RegisterSerializer
 from dj_rest_auth.serializers import LoginSerializer
 from phonenumber_field.serializerfields import PhoneNumberField
 from django.contrib.auth import get_user_model, authenticate
-from .models import PhoneNumber
+from .models import (CustomUser, PhoneNumber, Profile, Address)
 from .exceptions import (AccountNotRegisteredException,
                          InvalidCredentialExceptions, AccountDisabledException)
 from django.conf import settings
+from django_countries.serializers import CountryFieldMixin
 
 User = get_user_model()
 
@@ -178,3 +179,62 @@ class PhoneNumberVerificationSerializer(serializers.Serializer):
             phone_number=phone_number)
         phoneNumber_instance.check_verification(security_code=otp)
         return validated_data
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    '''
+    A serializer that serializes the user profile data, of the Profile model.
+    '''
+    class Meta:
+        model = Profile
+        fields = (
+            "avatar",
+            "bio",
+            "created_at",
+            "updated_at"
+        )
+
+
+# Here we use ContryFieldMixin because:
+# (Description of the CountryFieldMixin is provided in the comments of CountryFieldMixin)
+class AddressReadOnlySerializer(CountryFieldMixin, serializers.ModelSerializer):
+    '''
+    This serialzier is used to serialize the Address model of the user.
+    '''
+    # Since this serializer only get the address data in order to get the user data we need to user user.<field_name> to access them
+    # This is ready_only field which means we cant write data to it when a POST request is hit
+    user = serializers.CharField(source="user.get_full_name", read_only=True)
+
+    class Meta:
+        model = Address
+        fields = "__all__"
+
+
+class UserSerializer(serializers.ModelSerializer):
+    '''
+    This UserSerializer is used to serialize the user data that is fetched when the user needs to see the profile
+    data of the user. This actually contains nested fields like Profile and Address which is inturn another serializers
+    that serializes those data obtained from the request.
+    '''
+    profile = ProfileSerializer(read_only=True)
+    # Since ine user can have multiple addresses keep the many prop to True
+    addresses = AddressReadOnlySerializer(read_only=True, many=True)
+
+    # source="phone" tells DRF to fetch data from the related PhoneNumber model (i.e., CustomUser.phone).
+    # PhoneNumberSerializer is responsible for serializing the PhoneNumber model's fields.
+    # Since read_only=True, it only serializes data but does not allow updates via this serializer.
+    phone_number = PhoneNumberSerializer(source="phone", read_only=True)
+
+    class Meta:
+        model = CustomUser
+        fields = (
+            "id",
+            "email",
+            "phone_number",
+            "username",
+            "firstname",
+            "lastname",
+            "is_active",
+            "profile",  # This returns the Profie model instance
+            "addresses",  # This returns the Address model instance
+        )

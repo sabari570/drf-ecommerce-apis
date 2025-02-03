@@ -3,11 +3,13 @@ from django.utils.translation import gettext as _
 from django.contrib.auth import get_user_model
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from rest_framework.generics import GenericAPIView
+from rest_framework.generics import (
+    GenericAPIView, RetrieveAPIView, RetrieveUpdateAPIView, ListAPIView)
 from dj_rest_auth.registration.views import RegisterView
 from dj_rest_auth.views import LoginView
 from .serializers import (UserRegistrationSerializer, PhoneNumberSerializer,
-                          UserLoginSerializer, PhoneNumberVerificationSerializer)
+                          UserLoginSerializer, PhoneNumberVerificationSerializer,
+                          UserSerializer, ProfileSerializer, AddressReadOnlySerializer)
 from .utils import send_or_resend_sms
 from rest_framework.exceptions import APIException
 from .exceptions import InternalServerErrorException, TokenBlackListedException
@@ -25,9 +27,8 @@ from decouple import config
 from dj_rest_auth.registration.views import SocialLoginView
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
-
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import RedirectView
+from .models import CustomUser, Address, Profile
+from .permissions import IsUserProfileOwner, IsUserAddressOwner
 
 # Create your views here.
 
@@ -233,6 +234,8 @@ class LogoutView(GenericAPIView):
 # Once authorized using your own gmail, Click on Exchange authorization code for tokens button
 # You will get an access_token that should be passed in the body of this API
 # The response of this API will be the LoginAPI response
+
+
 class GoogleLoginView(SocialLoginView):
     ''''
     This view is used for logging in via google
@@ -241,12 +244,53 @@ class GoogleLoginView(SocialLoginView):
     client_class = OAuth2Client
     callback_url = config('GOOGLE_REDIRECT_URL')
 
-class HomeAPIView(GenericAPIView):
+
+class UserAPIView(RetrieveAPIView):
     '''
-    This is an API view that only authenticated users can access
+    This API view is used to retrieve the complete user details like the profile and address of the user
     '''
+    queryset = CustomUser.objects.all()
+    serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
-    def get(self, request, *args, **kwargs):
-        return Response({
-            "message": _("Welcome to the Home View.")
-        })
+
+    # This function is written to actually query the DB and get only the object that belongs to the requesting user
+    # Which means we cant get the user details of someother user in this APIView
+    # If you're using generic views like RetrieveAPIView or RetrieveUpdateDestroyAPIView, DRF already provides a built-in get_object().
+    # It queries the database to get an object based on the lookup field (e.g., id, slug).
+    def get_object(self):
+        return self.request.user
+
+
+class ProfileAPIView(RetrieveUpdateAPIView):
+    '''
+    This is used to retrieve the Profile details of the user
+    '''
+    queryset = Profile.objects.all()
+    serializer_class = ProfileSerializer
+    # Always write a permission class for ensuring the access control to specific users and dont just write the logic inside the get_object()
+    # This is how the Flow goes:
+    #   1. User makes a request → DRF calls get_object() → returns request.user.profile.
+    #   2. DRF checks permissions:
+    #       - Calls has_object_permission(request, view, obj), where obj is the profile returned by get_object().
+    #       - Returns True if the profile belongs to the user or if they are staff.
+    #       - Returns False → raises 403 Forbidden if unauthorized.
+    # However:
+    #   - It makes security dependent on the get_object() method, which is not the best practice.
+    permission_classes = [permissions.IsAuthenticated, IsUserProfileOwner]
+
+    def get_object(self):
+        return self.request.user.profile
+
+
+class AddressAPIView(ListAPIView, RetrieveAPIView):
+    '''
+    List and retrieves the address of the user
+    '''
+    queryset = Address.objects.all()
+    serializer_class = AddressReadOnlySerializer
+    permission_classes = [IsUserAddressOwner]
+
+    def get_queryset(self):
+        res = super().get_queryset()
+        user = self.request.user
+        return res.filter(user=user)

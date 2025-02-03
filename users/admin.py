@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
-from .models import CustomUser, PhoneNumber
+from .models import CustomUser, PhoneNumber, Profile, Address
 
 # Register your models here.
 
@@ -9,6 +9,7 @@ from .models import CustomUser, PhoneNumber
 
 # _("User Information") and others in fieldsets → Translatable section headers
 # ✔ _("Permissions"), _("Important Dates") → Makes labels translatable
+
 
 @admin.register(CustomUser)
 class CustomUserAdmin(admin.ModelAdmin):
@@ -50,3 +51,21 @@ class PhoneNumberAdmin(admin.ModelAdmin):
         (_("Verification Details"), {"fields": ("security_code", "sent")}),
         (_("Timestamps"), {"fields": ("created_at", "updated_at")}),
     )
+
+
+@admin.register(Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "avatar", "bio", "created_at", "updated_at")
+    search_fields = ("bio", "user__email", "user__username")
+    ordering = ("-created_at",)
+    readonly_fields = ("created_at", "updated_at",)
+
+
+@admin.register(Address)
+class AddressAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "address_type", "default", "country", "city",
+                    "street_address", "apartment_address", "postal_code", "created_at", "updated_at")
+    search_fields = ("country", "city", "street_address",
+                     "user__email", "user__username")
+    ordering = ("-created_at",)
+    readonly_fields = ("created_at", "updated_at",)
