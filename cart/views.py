@@ -7,7 +7,7 @@ from .permissions import IsNotSellerOfProduct
 
 class CartItemViewSet(viewsets.ModelViewSet):
     queryset = CartItem.objects.all()
-    # permission_classes = [IsNotSellerOfProduct]
+    permission_classes = [IsNotSellerOfProduct]
 
     def get_queryset(self):
         return CartItem.objects.filter(cart__user=self.request.user)
