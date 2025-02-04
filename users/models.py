@@ -15,6 +15,11 @@ from django.utils import timezone
 from rest_framework.exceptions import NotAcceptable
 from django_countries.fields import CountryField
 
+# This is used for django signals
+from django.dispatch import receiver
+# This is the type of Signal we need
+from django.db.models.signals import post_save
+
 # Create your models here.
 
 
@@ -187,3 +192,30 @@ class Address(models.Model):
 
     def __str__(self):
         return self.user.get_full_name()
+
+
+# ********************** THIS SECTION CONTAINS THE SIGNALS CODE **********************
+# Here is where we write django signals needed when models are created
+# Now i need to create a Profile object, after a user gets saved to the DB
+# This means it is a post_save signal and the sender is User
+
+# Explanation:
+#   what is happening is when the User model is saved, a signal is fired called create_profile which creates a Profile instance with a foreign key pointing to the instance of the user. The other method save_profile just saves the instance.
+
+#   Now let’s understand the arguments
+
+#   receiver – The function who receives the signal and does something.
+#   sender – Sends the signal
+#   created (only availabel in post_save) — Checks whether the model is created or not (boolean val1ue returns true if User is created successfully)
+#   instance — created model instance
+#   **kwargs –wildcard keyword arguments
+@receiver(post_save, sender=User)
+def create_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+
+
+@receiver(post_save, sender=User)
+def save_profile(sender, instance, **kwargs):
+    # This connects the User with the Profile model
+    instance.profile.save()

@@ -34,4 +34,3 @@ class ProductViewSet(viewsets.ModelViewSet):
             return [IsSellerOrAdmin()]
         else:
             return [permissions.AllowAny()]
-        # return super().get_permissions()

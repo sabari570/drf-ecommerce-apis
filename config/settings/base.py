@@ -154,6 +154,11 @@ REST_FRAMEWORK = {
     ),
     # Inorder to setup API documentation
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+
+    # Adding pagination to the application,
+    # Here the pagination style is via page numbers
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10
 }
 
 # This is inorder to view the django admin panel

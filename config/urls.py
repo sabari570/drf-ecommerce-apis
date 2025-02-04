@@ -40,16 +40,16 @@ urlpatterns = [
             confirm_email, name="account_confirm_email"),
 
     # This endpoint is for sending a password reset email
-    path("password/reset/", PasswordResetView.as_view(), name="password reset"),
+    path("api/password/reset/", PasswordResetView.as_view(), name="password reset"),
 
     # For the password reset email API endpoint to run successfully we will need the password/reset/confirm endpoint to be defined
     # This is the end point which will be sent throught the email and on clicking it you will be able to reset the password
     # you will have 2 additional fields in it uid and token which will be obtained from the URL
-    path("password/reset/confirm/<str:uidb64>/<str:token>/",
+    path("api/password/reset/confirm/<str:uidb64>/<str:token>/",
          PasswordResetConfirmView.as_view(), name="password_reset_confirm"),
 
     # API endpoint to change the password
-    path("password/change/", PasswordChangeView.as_view(), name="change password"),
+    path("api/password/change/", PasswordChangeView.as_view(), name="change password"),
 
     # this is added inorder to avoid the allauth-inactive url issue
     path("", include("allauth.account.urls")),
