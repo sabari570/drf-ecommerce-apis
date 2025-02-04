@@ -6,4 +6,4 @@ class IsSellerOrAdmin(BasePermission):
         return request.user.is_authenticated is True
 
     def has_object_permission(self, request, view, obj):
-        return request.method and (obj.seller == request.user or request.user.is_admin)
+        return request.method in SAFE_METHODS and (obj.seller == request.user or request.user.is_admin)

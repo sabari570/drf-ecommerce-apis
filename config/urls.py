@@ -30,6 +30,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/user/', include('users.urls', namespace='users')),
     path('api/products/', include('products.urls', namespace='products')),
+    path('api/cart/', include('cart.urls', namespace='cart')),
 
     # This path is added inorder to verify the email address, when a user is registered successfully you get an email with an URL to confirm email
     # on clicking that link you will be redirected to account-confirm-email/ page which hits a GET request
@@ -49,7 +50,8 @@ urlpatterns = [
          PasswordResetConfirmView.as_view(), name="password_reset_confirm"),
 
     # API endpoint to change the password
-    path("api/password/change/", PasswordChangeView.as_view(), name="change password"),
+    path("api/password/change/", PasswordChangeView.as_view(),
+         name="change password"),
 
     # this is added inorder to avoid the allauth-inactive url issue
     path("", include("allauth.account.urls")),

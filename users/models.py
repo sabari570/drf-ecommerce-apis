@@ -74,8 +74,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         '''
         Returns the first_name plus the last_name, with a space in between
         '''
-        full_name = "%s %s" % (self.firstname, self.lastname)
-        return full_name.strip()
+        if self.firstname and self.lastname:
+            return f"{self.firstname} {self.lastname}".strip()
+        return self.username
 
 
 # Accessing the User model we created
@@ -135,7 +136,7 @@ class PhoneNumber(models.Model):
         if (not self.is_security_code_expired() and
            security_code == self.security_code and
            self.is_verified == False    # if not verified before
-            ):
+                ):
             self.is_verified = True
             self.save()
         else:
@@ -219,3 +220,13 @@ def create_profile(sender, instance, created, **kwargs):
 def save_profile(sender, instance, **kwargs):
     # This connects the User with the Profile model
     instance.profile.save()
+
+# Signal to create a cart when a user is created
+
+
+@receiver(post_save, sender=User)
+def create_cart(sender, instance, created, **kwargs):
+    if created:
+        # This is imported in here inorder to avoid circular imports
+        from cart.models import Cart
+        Cart.objects.create(user=instance)

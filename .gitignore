@@ -51,3 +51,6 @@ manage.py
 
 # example database
 drf_example
+
+# Ingore the images folder
+config/media/
