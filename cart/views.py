@@ -4,8 +4,13 @@ from .models import Cart, CartItem
 from .permissions import IsNotSellerOfProduct
 from django.utils.translation import gettext_lazy as _
 from .exceptions import AddingOwnProductToCartException
+from users.exceptions import InternalServerErrorException
+from rest_framework.exceptions import APIException
+# Fro enabling transaction
+from django.db import transaction
 
-
+# *********************** BEST APPROACH FOR WRAPPING A TRANSACTION ***********************
+# Since perform_create, perform_update, and perform_destroy are entry points for modifying data, wrap them inside a transaction.
 class CartItemViewSet(viewsets.ModelViewSet):
     queryset = CartItem.objects.all()
     permission_classes = [IsNotSellerOfProduct]
@@ -24,12 +29,47 @@ class CartItemViewSet(viewsets.ModelViewSet):
     # It performs additional checks (like ensuring the user isn't the seller).
     # It then calls serializer.save(), which internally invokes the create method inside your serializer.
     def perform_create(self, serializer):
-        product = serializer.validated_data.get("product")
+        try:
+            product = serializer.validated_data.get("product")
 
-        if self.request.user == product.seller:
-            raise AddingOwnProductToCartException()
+            if self.request.user == product.seller:
+                raise AddingOwnProductToCartException()
 
-        serializer.save(cart=self.request.user.cart)
+            serializer.save(cart=self.request.user.cart)
+        except APIException as e:
+            raise e
+        except Exception as e:
+            print("Error while adding item to cart: ", e)
+            raise InternalServerErrorException()
+
+    # Start point before calling the update in serialzier
+    def perform_update(self, serializer):
+        """
+        Handle updating a cart item.
+        """
+        try:
+            with transaction.atomic():  # Start transaction
+                serializer.save()
+        except APIException as e:
+            raise e
+        except Exception as e:
+            print("Error while adding item to cart: ", e)
+            raise InternalServerErrorException()
+        
+    # Start point before calling the delete in serializer 
+    def perform_destroy(self, instance):
+        """
+        Handle removing a cart item.
+        """
+        try:
+            with transaction.atomic():  # Start transaction
+                instance.delete()
+        except APIException as e:
+            raise e
+        except Exception as e:
+            print("Error while adding item to cart: ", e)
+            raise InternalServerErrorException()
+
 
 # The ReadOnlyModelViewSet:- only allows GET request
 class CartListAPIView(generics.ListAPIView):
