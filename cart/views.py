@@ -30,12 +30,13 @@ class CartItemViewSet(viewsets.ModelViewSet):
     # It then calls serializer.save(), which internally invokes the create method inside your serializer.
     def perform_create(self, serializer):
         try:
-            product = serializer.validated_data.get("product")
+            with transaction.atomic():
+                product = serializer.validated_data.get("product")
 
-            if self.request.user == product.seller:
-                raise AddingOwnProductToCartException()
+                if self.request.user == product.seller:
+                    raise AddingOwnProductToCartException()
 
-            serializer.save(cart=self.request.user.cart)
+                serializer.save(cart=self.request.user.cart)
         except APIException as e:
             raise e
         except Exception as e:

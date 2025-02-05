@@ -136,7 +136,7 @@ class PhoneNumber(models.Model):
         if (not self.is_security_code_expired() and
            security_code == self.security_code and
            self.is_verified == False    # if not verified before
-                ):
+            ):
             self.is_verified = True
             self.save()
         else:
@@ -177,6 +177,12 @@ class Address(models.Model):
     # One user can have muliple addresses
     user = models.ForeignKey(
         CustomUser, related_name='addresses', on_delete=models.CASCADE)
+    # For the 'address_type' field Django handles this in the Following way:
+    # ADDRESS_CHOICES:->
+    #   * Django stores the first value in the database.
+    #   * The second value is only for display in forms or Django admin.
+    #   * While sending API request we should send it as 'B' or 'S'
+    #   * If you try sending "billing" or "shipping", Django will raise a ValidationError because it expects "B" or "S".
     address_type = models.CharField(max_length=1, choices=ADDRESS_CHOICES)
     default = models.BooleanField(default=False)
     country = CountryField()

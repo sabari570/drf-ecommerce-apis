@@ -59,7 +59,7 @@ class UserRegistrationAPIView(RegisterView):
                 if email and phone_number:
                     otp = send_or_resend_sms(phone_number)
                     response_data = {
-                        "detail": "Verification e-mail and SMS sent successfully.",
+                        "detail": _("Verification e-mail and SMS sent successfully."),
                         "secuity code": str(otp),
                     }
                 elif email and not phone_number:
@@ -69,7 +69,7 @@ class UserRegistrationAPIView(RegisterView):
                 else:
                     otp = send_or_resend_sms(phone_number)
                     response_data = {
-                        "detail": "Verification SMS sent successfully.",
+                        "detail": _("Verification SMS sent successfully."),
                         "secuity code": str(otp),
                     }
                 return Response(response_data, status=status.HTTP_201_CREATED, headers=headers)
@@ -209,7 +209,7 @@ class LogoutView(GenericAPIView):
                 BlacklistedToken.objects.create(token=outstanding_token)
 
             response = Response(
-                {"detail": "Successfully logged out"}, status=status.HTTP_200_OK)
+                {"detail": _("Successfully logged out")}, status=status.HTTP_200_OK)
             response.delete_cookie(ACCESS_TOKEN_COOKIE_KEY)
             response.delete_cookie(REFRESH_TOKEN_COOKIE_KEY)
             return response

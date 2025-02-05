@@ -31,6 +31,7 @@ urlpatterns = [
     path('api/user/', include('users.urls', namespace='users')),
     path('api/products/', include('products.urls', namespace='products')),
     path('api/cart/', include('cart.urls', namespace='cart')),
+    path('api/orders/', include("orders.urls", namespace='orders')),
 
     # This path is added inorder to verify the email address, when a user is registered successfully you get an email with an URL to confirm email
     # on clicking that link you will be redirected to account-confirm-email/ page which hits a GET request

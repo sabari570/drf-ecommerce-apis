@@ -146,7 +146,9 @@ class UserLoginSerializer(LoginSerializer):
             email_address = user.emailaddress_set.filter(
                 email=user.email, verified=True).exists()
             if not email_address:
-                raise serializers.ValidationError(_("E-mail is not verified"))
+                raise serializers.ValidationError({
+                    "detail": _("E-mail is not verified")
+                })
         else:
             # Here we dont filter them because User and PhoneNumber has a one-to-one relationship so we
             # can access the phone number of a user directly

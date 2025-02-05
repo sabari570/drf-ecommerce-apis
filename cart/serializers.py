@@ -10,6 +10,7 @@ class CartItemReadSerializer(serializers.ModelSerializer):
     """
 
     product_name = serializers.CharField(source="product.name", read_only=True)
+    product_desc = serializers.CharField(source="product.desc", read_only=True)
     price = serializers.CharField(source="product.price", read_only=True)
 
     class Meta:
@@ -17,6 +18,7 @@ class CartItemReadSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "product_name",
+            "product_desc",
             "quantity",
             "price",
             "cost",
@@ -29,6 +31,7 @@ class CartItemWriteSerializer(serializers.ModelSerializer):
     """
 
     price = serializers.CharField(source="product.price", read_only=True)
+    product_desc = serializers.CharField(source="product.desc", read_only=True)
     product = serializers.PrimaryKeyRelatedField(
         queryset=Product.objects.all(), required=True
     )
@@ -39,6 +42,7 @@ class CartItemWriteSerializer(serializers.ModelSerializer):
             "id",
             "cart",
             "product",
+            "product_desc",
             "quantity",
             "price",
             "cost",
