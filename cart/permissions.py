@@ -1,6 +1,7 @@
 from rest_framework.permissions import BasePermission
 from rest_framework.exceptions import PermissionDenied
 from django.utils.translation import gettext_lazy as _
+from .exceptions import AddingOwnProductToCartException
 
 
 class IsNotSellerOfProduct(BasePermission):
@@ -12,10 +13,6 @@ class IsNotSellerOfProduct(BasePermission):
         return request.user.is_authenticated is True
 
     def has_object_permission(self, request, view, obj):
-        print(request.user)
-        print(obj.product.seller)
         if request.user == obj.product.seller:
-            raise PermissionDenied(
-                _("Adding your own product to the cart is not allowed.")
-            )
+            raise AddingOwnProductToCartException()
         return True

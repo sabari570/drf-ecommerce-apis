@@ -62,7 +62,8 @@ class CartItemWriteSerializer(serializers.ModelSerializer):
                 product_quantity = validated_data.get("product").quantity
 
             if order_quantity > product_quantity:
-                error = {"quantity": _("Requested quantity exceeds available stock.")}
+                error = {"quantity": _(
+                    "Requested quantity exceeds available stock.")}
                 raise serializers.ValidationError(error)
         return validated_data
 
@@ -72,7 +73,8 @@ class CartItemWriteSerializer(serializers.ModelSerializer):
         if CartItem.objects.filter(cart=user.cart, product=product_data).first():
             error = {"detail": _("The product is already added to cart")}
             raise serializers.ValidationError(error)
-        cartItem_instance = CartItem.objects.create(cart=user.cart, **validated_data)
+        cartItem_instance = CartItem.objects.create(
+            cart=user.cart, product=product_data)
         return cartItem_instance
 
     def update(self, instance, validated_data):
