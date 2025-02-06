@@ -240,3 +240,48 @@ class UserSerializer(serializers.ModelSerializer):
             "profile",  # This returns the Profie model instance
             "addresses",  # This returns the Address model instance
         )
+
+
+class ShippingAddressSerializer(CountryFieldMixin, serializers.ModelSerializer):
+    '''
+    Serializer class to serialize address of type shipping
+
+    For Shipping address, automatically set address type to shipping
+    '''
+    # serializers.CurrentUserDefault(): Automatically assigns the currently logged-in user when creating an address.
+    # Purpose: Ensures a user can only create an address for themselves, preventing users from setting another user's ID manually.
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    class Meta:
+        model = Address
+        fields = "__all__"
+        # Prevents modification of address_type.
+        read_only_fields = ("address_type",)
+
+    # Purpose: Forces address_type to Always be "S" in API Responses
+    # Even if the database somehow stores the wrong address_type, the API will always return "S" to the client.
+    # When creating an address, to_representation() does not set the value in the database.
+    # It is only used for how the value must be shown in the reponse that's all
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation["address_type"] = "S"
+        return representation
+
+
+class BillingAddressSerializer(CountryFieldMixin, serializers.ModelSerializer):
+    '''
+    Serializer class to serialize address of type billing
+
+    For billing address, automatically set address type to billing
+    '''
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    class Meta:
+        model = Address
+        fields = "__all__"
+        read_only_fields = ("address_type",)
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation["address_type"] = "B"
+        return representation

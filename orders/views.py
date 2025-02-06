@@ -16,6 +16,9 @@ class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     permission_classes = [IsOrderByBuyerOrAdmin, CanUpdateOrderPermission]
 
+    # This line only allows the GET, POST, and DELETE route for this view PUT and PATCH requests are not allowed
+    http_method_names = ["get", "post", "delete"]
+
     def get_queryset(self):
         """
         Dynamically filter orders based on query parameters: status.

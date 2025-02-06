@@ -191,8 +191,8 @@ class Address(models.Model):
     apartment_address = models.CharField(max_length=100)
     postal_code = models.CharField(max_length=20, blank=True)
 
-    created_at = models.DateField(auto_now_add=True)
-    updated_at = models.DateField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ("-created_at",)
