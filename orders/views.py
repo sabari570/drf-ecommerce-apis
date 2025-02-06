@@ -2,7 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .models import Order
 from cart.models import CartItem
-from .permissions import IsOrderByBuyerOrAdmin, CanUpdateOrderPermission
+from .permissions import IsOrderByBuyerOrAdmin, CanUpdateOrderPermission, IsStaffForOrderDeletion
 from .serializers import OrderReadSerializer, OrderWriteSerializer
 from django.db import transaction
 from rest_framework.exceptions import APIException
@@ -18,6 +18,25 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     # This line only allows the GET, POST, and DELETE route for this view PUT and PATCH requests are not allowed
     http_method_names = ["get", "post", "delete"]
+
+    # Standard approach to apply a custom permission inorder to restrict the access to only selected endpoints.
+    def get_permissions(self):
+        """
+        Apply custom permissions to restrict order deletion to staff users only.
+        """
+        # Apply IsStaffForOrderDeletion only for the destroy action (standard delete)
+        if self.action == "destroy":
+            return [IsStaffForOrderDeletion()]
+
+        # In Django REST Framework (DRF), the @action decorator creates a custom view for that specific endpoint.
+        # Even though it's a DELETE request, it's not considered part of the default destroy action (which is tied directly to the model instance).
+        # This is how we apply the same permission to the custom decorator we created as well
+        # This Restricts the cancel order feature to be only accessible by staff_users
+        # if self.action == "cancel":
+        #     return [IsStaffForOrderDeletion()]
+
+        # For other actions, apply the default permissions
+        return [permission() for permission in self.permission_classes]
 
     def get_queryset(self):
         """

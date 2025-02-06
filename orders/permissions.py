@@ -23,3 +23,16 @@ class CanUpdateOrderPermission(BasePermission):
         if view.action in ['update', 'partial_update']:
             return False
         return True
+
+
+class IsStaffForOrderDeletion(BasePermission):
+    '''
+    Custom permission for checking whether the user is staff for order deletion.
+    '''
+
+    def has_permission(self, request, view):
+        # Allow all actions except DELETE
+        if request.method != "DELETE":
+            return True
+        # Only staff users can delete
+        return (request.user.is_authenticated and request.user.is_staff) is True
