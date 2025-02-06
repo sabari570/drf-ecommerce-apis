@@ -1,5 +1,6 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework.permissions import BasePermission
+from django.utils.translation import gettext_lazy as _
 
 
 class IsOrderByBuyerOrAdmin(BasePermission):
@@ -29,6 +30,8 @@ class IsStaffForOrderDeletion(BasePermission):
     '''
     Custom permission for checking whether the user is staff for order deletion.
     '''
+    # Custom Error messages can be placed for permissions like this.
+    message = _("Normal users dont have access to this endpoint.")
 
     def has_permission(self, request, view):
         # Allow all actions except DELETE
