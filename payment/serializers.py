@@ -3,6 +3,8 @@ from orders.models import Order
 from users.models import Address
 from .models import Payment
 from rest_framework import serializers
+from django.utils.translation import gettext_lazy as _
+from users.utils import get_insufficient_products
 
 
 class PaymentOptionSerializer(serializers.ModelSerializer):
@@ -104,6 +106,14 @@ class CheckoutSerializer(serializers.ModelSerializer):
                 existing_payment = Payment.objects.filter(order=instance)
                 existing_payment.update(**payment)
                 order_payment = existing_payment.first()
+
+        # Checking the if the products quantities are sufficient enough to place an order
+        insufficent_products = get_insufficient_products(instance.order_items.all())
+
+        if insufficent_products:
+            raise serializers.ValidationError({
+                "detail": _("The following products are out of stock or insufficient: ") + ", ".join(insufficent_products)
+            })
 
         # These lines connects the Address table and the Order table
         # We update the order table data and connect it with the already created Address records

@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Order, OrderItem
 from cart.models import CartItem
 from django.utils.translation import gettext_lazy as _
+from users.utils import get_insufficient_products
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -82,6 +83,14 @@ class OrderWriteSerializer(serializers.ModelSerializer):
         if not cart_items.exists():
             raise serializers.ValidationError({
                 "detail": _("Your cart is empty, Can't place an order.")
+            })
+
+        # Checking the if the products quantities are sufficient enough to place an order
+        insufficent_products = get_insufficient_products(cart_items)
+
+        if insufficent_products:
+            raise serializers.ValidationError({
+                "detail": _("The following products are out of stock or insufficient: ") + ", ".join(insufficent_products)
             })
 
         # Checking if a pending order already exists

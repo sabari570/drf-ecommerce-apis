@@ -19,7 +19,8 @@ class ProductViewSet(viewsets.ModelViewSet):
     Viewset for products CRUD operations.
     This is the one which suits the URLs generated from DefaultRouter
     '''
-    queryset = Product.objects.all()
+    # Returns only those products whose count is greater than 0
+    queryset = Product.objects.filter(quantity__gt=0)
 
     def get_serializer_class(self):
         if self.action in ("create", "update", "partial_update", "delete"):

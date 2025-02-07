@@ -56,19 +56,18 @@ class CartItemWriteSerializer(serializers.ModelSerializer):
         """
         Validate the cart items, check stock and user-specific conditions
         """
-        if validated_data.get("quantity"):
-            order_quantity = validated_data.get("quantity")
-            # Because the product id can be changed in the request so instead we get the product quantity directly
-            # from the product that is already present in the cart while updating
-            if self.instance:
-                product_quantity = self.instance.product.quantity
-            else:
-                product_quantity = validated_data.get("product").quantity
+        order_quantity = validated_data.get("quantity", 1)
+        # Because the product id can be changed in the request so instead we get the product quantity directly
+        # from the product that is already present in the cart while updating
+        if self.instance:
+            product_quantity = self.instance.product.quantity
+        else:
+            product_quantity = validated_data.get("product").quantity
 
-            if order_quantity > product_quantity:
-                error = {"quantity": _(
-                    "Requested quantity exceeds available stock.")}
-                raise serializers.ValidationError(error)
+        if order_quantity > product_quantity:
+            error = {"quantity": _(
+                "Requested quantity exceeds available stock.")}
+            raise serializers.ValidationError(error)
         return validated_data
 
     def create(self, validated_data):
